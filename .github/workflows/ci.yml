@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install Nim 2.2.0 and GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential curl xz-utils ca-certificates
+          curl -fsSL https://nim-lang.org/download/nim-2.2.0-linux_x64.tar.xz -o /tmp/nim.tar.xz
+          sudo tar -xJf /tmp/nim.tar.xz -C /opt
+          sudo ln -sf /opt/nim-2.2.0/bin/nim /usr/local/bin/nim
+          sudo ln -sf /opt/nim-2.2.0/bin/nimble /usr/local/bin/nimble
+      - name: Run offline test and C-consumer verification suite
+        run: /bin/sh scripts/test-offline.sh
+      - name: Run offline asserting demo
+        run: /bin/sh scripts/demo-offline.sh --assert
+      - name: Run offline JSON demo
+        run: /bin/sh scripts/demo-offline.sh --assert --json
